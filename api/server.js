@@ -6,7 +6,7 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 
-const port = process.env.PORT || 3050;
+const port = process.env.PORT || 3555;
 const camIp = process.env.CAMERA_IP || '10.8.0.2';
 const camPort = process.env.CAMERA_PORT || 3001;
 const camUsername = process.env.CAMERA_USER || 'wolke';
