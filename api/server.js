@@ -3,7 +3,7 @@ const express = require('express');
 const Cam = require('../lib/onvif').Cam;
 
 const app = express();
-const port = 3051; // Puerto en el que la API estará escuchando
+const port = 3050; // Puerto en el que la API estará escuchando
 
 let cam_obj = null;
 
@@ -11,10 +11,10 @@ let cam_obj = null;
 function initCamera() {
     return new Promise((resolve, reject) => {
         new Cam({
-            hostname: process.env.CAMERA_IP,
-            username: process.env.CAMERA_USERNAME,
-            password: process.env.CAMERA_PASSWORD,
-            port: process.env.CAMERA_PORT,
+            hostname: '10.8.0.2',
+            username: 'wolke',
+            password: 'Wolke1028',
+            port: 3001,
             timeout: 10000
         }, function(err) {
             if (err) {
