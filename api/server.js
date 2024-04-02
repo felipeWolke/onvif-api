@@ -1,9 +1,16 @@
 require('dotenv').config();
 const express = require('express');
-const Cam = require('../lib/onvif').Cam;
+const { Cam } = require('onvif');
+const cors = require('cors');
 
 const app = express();
-const port = 3050; // Puerto en el que la API estará escuchando
+app.use(cors());
+
+const port = process.env.PORT || 3050;
+const camIp = process.env.CAMERA_IP || '10.8.0.2';
+const camPort = process.env.CAMERA_PORT || 3001;
+const camUsername = process.env.CAMERA_USER || 'wolke';
+const camPassword = process.env.CAMERA_PASSWORD || 'Wolke1028';
 
 let cam_obj = null;
 
@@ -11,18 +18,17 @@ let cam_obj = null;
 function initCamera() {
     return new Promise((resolve, reject) => {
         new Cam({
-            hostname: '10.8.0.2',
-            username: 'wolke',
-            password: 'Wolke1028',
-            port: 3001,
+            hostname: camIp,
+            username: camUsername,
+            password: camPassword,
+            port: camPort,
             timeout: 10000
         }, function(err) {
             if (err) {
-                reject(err);
-            } else {
-                cam_obj = this;
-                resolve();
+                return reject(err);
             }
+            cam_obj = this;
+            resolve();
         });
     });
 }
@@ -30,34 +36,11 @@ function initCamera() {
 // Endpoint para mover la cámara
 app.get('/move', (req, res) => {
     const { x, y, zoom } = req.query;
-    
-    if (!cam_obj) {
-        return res.status(500).send('Camera not initialized');
-    }
-
-    cam_obj.continuousMove({
-        x: parseFloat(x),
-        y: parseFloat(y),
-        zoom: parseFloat(zoom)
-    }, function(err) {
-        if (err) {
-            console.log(err);
-            return res.status(500).send('Error moving camera');
-        }
-        res.send('Camera moved');
-    });
-});
-
-// Endpoint para mover la cámara
-// Endpoint para mover la cámara
-app.get('/move', (req, res) => {
-    const { x, y, zoom } = req.query;
 
     if (!cam_obj) {
         return res.status(500).send('Camera not initialized');
     }
 
-    // Inicia el movimiento
     cam_obj.continuousMove({
         x: parseFloat(x),
         y: parseFloat(y),
@@ -84,8 +67,6 @@ app.get('/move', (req, res) => {
     });
 });
 
-
-
 // Inicia el servidor después de inicializar la cámara
 initCamera().then(() => {
     app.listen(port, () => {
@@ -94,4 +75,3 @@ initCamera().then(() => {
 }).catch(err => {
     console.error('Failed to initialize camera:', err);
 });
-
