@@ -7,7 +7,7 @@ const app = express();
 app.use(cors());
 
 const port = process.env.PORT || 3555;
-const camIp = process.env.CAMERA_IP || '10.8.0.3';
+const camIp = process.env.CAMERA_IP || '10.8.0.4';
 const camPort = process.env.CAMERA_PORT || 3001;
 const camUsername = process.env.CAMERA_USER || 'wolke';
 const camPassword = process.env.CAMERA_PASSWORD || 'Wolke1028';
