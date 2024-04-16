@@ -15,7 +15,7 @@ const camPassword = process.env.CAMERA_PASSWORD || 'Wolke1028';
 const camIps = {
     1: '10.8.0.3',
     2: '10.8.0.4',
-    3: '10.8.0.5'
+    3: '10.8.0.7'
 };
 
 let cams = {};
@@ -81,6 +81,30 @@ app.get('/move', (req, res) => {
         }, 1000); // 1000 milisegundos = 1 segundo
     });
 });
+
+app.get('/moveAbsolute', (req, res) => {
+    const { camId, x, y, zoom } = req.query;
+    const cam = cams[camId];
+
+    if (!cam) {
+        return res.status(500).send('Camera not initialized or invalid camera ID');
+    }
+
+    cam.absoluteMove({
+        x: parseFloat(x),
+        y: parseFloat(y),
+        zoom: parseFloat(zoom)
+    }, (err) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).send('Error moving camera to absolute position');
+        }
+
+        console.log(`Absolute move command sent to camera ${camId}`);
+        res.send(`Camera ${camId} moved to absolute position`);
+    });
+});
+
 
 // Inicia el servidor después de inicializar las cámaras
 initCameras().then(() => {
