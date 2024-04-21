@@ -1,7 +1,11 @@
 require('dotenv').config();
+//console.log(process.env);  // Esto mostrará todas las variables de entorno cargadas
+
 const express = require('express');
 const { Cam } = require('onvif');
 const cors = require('cors');
+const authenticate = require('../authentication/authentication');
+
 
 const app = express();
 app.use(cors());
@@ -48,7 +52,7 @@ function initCameras() {
 }
 
 // Endpoint para mover la cámara
-app.get('/move', (req, res) => {
+app.get('/move', authenticate,(req, res) => {
     const { camId, x, y, zoom } = req.query;
     const cam = cams[camId];
 
@@ -81,8 +85,7 @@ app.get('/move', (req, res) => {
         }, 1000); // 1000 milisegundos = 1 segundo
     });
 });
-
-app.get('/moveAbsolute', (req, res) => {
+app.get('/moveAbsolute',authenticate, (req, res) => {
     const { camId, x, y, zoom } = req.query;
     const cam = cams[camId];
 
@@ -104,7 +107,8 @@ app.get('/moveAbsolute', (req, res) => {
         res.send(`Camera ${camId} moved to absolute position`);
     });
 });
-app.get('/health', (req, res) => {
+app.get('/health',authenticate, (req, res) => {
+    console.log(process.env.TOKEN)
     res.send("saludo")
 });
 
