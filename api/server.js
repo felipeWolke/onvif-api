@@ -104,7 +104,9 @@ app.get('/moveAbsolute', (req, res) => {
         res.send(`Camera ${camId} moved to absolute position`);
     });
 });
-
+app.get('/health', (req, res) => {
+    res.send("saludo")
+});
 
 // Inicia el servidor después de inicializar las cámaras
 initCameras().then(() => {
