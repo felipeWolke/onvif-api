@@ -1,6 +1,6 @@
 require('dotenv').config();
 const authenticate = (req, res, next) => {
-    console.log(process.env.TOKEN)
+    
     const token = req.headers['authorization'];
     if (!token) {
         return res.status(401).send('Access Denied: No Token Provided!');
