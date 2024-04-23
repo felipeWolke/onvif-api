@@ -85,6 +85,16 @@ app.get('/move', authenticate,(req, res) => {
         }, 1000); // 1000 milisegundos = 1 segundo
     });
 });
+
+// Endpoint para obtener el estado de las cámaras
+app.get('/cameras/status', authenticate, (req, res) => {
+    let status = {};
+    for (let camId in camIps) {
+        status[camId] = cams[camId] ? 'Connected' : 'Disconnected';
+    }
+    res.json(status);
+});
+
 app.get('/moveAbsolute',authenticate, (req, res) => {
     const { camId, x, y, zoom } = req.query;
     const cam = cams[camId];
