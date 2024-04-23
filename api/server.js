@@ -9,6 +9,10 @@ const authenticate = require('../authentication/authentication');
 
 const app = express();
 app.use(cors());
+app.use(express.json());
+
+// Middleware para datos de formularios
+app.use(express.urlencoded({ extended: true }));
 
 const port = process.env.PORT || 3555;
 const camPort = process.env.CAMERA_PORT || 3001;
@@ -52,19 +56,16 @@ function initCameras() {
 }
 
 // Endpoint para mover la cámara
-app.get('/move', authenticate,(req, res) => {
-    const { camId, x, y, zoom } = req.query;
+// Endpoint para mover la cámara de manera continua
+app.post('/move', authenticate, (req, res) => {
+    const { camId, x, y, zoom } = req.body;
     const cam = cams[camId];
 
     if (!cam) {
         return res.status(500).send('Camera not initialized or invalid camera ID');
     }
 
-    cam.continuousMove({
-        x: parseFloat(x),
-        y: parseFloat(y),
-        zoom: parseFloat(zoom)
-    }, (err) => {
+    cam.continuousMove({ x, y, zoom }, (err) => {
         if (err) {
             console.log(err);
             return res.status(500).send('Error moving camera');
@@ -72,7 +73,6 @@ app.get('/move', authenticate,(req, res) => {
 
         console.log(`Move command sent to camera ${camId}, camera will move for 1 second`);
 
-        // Programa la detención del movimiento después de 1 segundo
         setTimeout(() => {
             cam.stop({panTilt: true, zoom: true}, (stopErr) => {
                 if (stopErr) {
@@ -82,32 +82,20 @@ app.get('/move', authenticate,(req, res) => {
                 console.log('Stop command sent, camera has stopped moving');
                 res.send(`Camera ${camId} moved for 1 second and stopped`);
             });
-        }, 1000); // 1000 milisegundos = 1 segundo
+        }, 1000);
     });
 });
 
-// Endpoint para obtener el estado de las cámaras
-app.get('/cameras/status', authenticate, (req, res) => {
-    let status = {};
-    for (let camId in camIps) {
-        status[camId] = cams[camId] ? 'Connected' : 'Disconnected';
-    }
-    res.json(status);
-});
-
-app.get('/moveAbsolute',authenticate, (req, res) => {
-    const { camId, x, y, zoom } = req.query;
+// Endpoint para mover la cámara a una posición absoluta
+app.post('/moveAbsolute', authenticate, (req, res) => {
+    const { camId, x, y, zoom } = req.body;
     const cam = cams[camId];
 
     if (!cam) {
         return res.status(500).send('Camera not initialized or invalid camera ID');
     }
 
-    cam.absoluteMove({
-        x: parseFloat(x),
-        y: parseFloat(y),
-        zoom: parseFloat(zoom)
-    }, (err) => {
+    cam.absoluteMove({ x, y, zoom }, (err) => {
         if (err) {
             console.log(err);
             return res.status(500).send('Error moving camera to absolute position');
@@ -117,6 +105,7 @@ app.get('/moveAbsolute',authenticate, (req, res) => {
         res.send(`Camera ${camId} moved to absolute position`);
     });
 });
+
 app.get('/health',authenticate, (req, res) => {
     console.log(process.env.TOKEN)
     res.send("saludo")
