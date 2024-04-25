@@ -1,5 +1,6 @@
 require('dotenv').config();
-//console.log(process.env);  // Esto mostrará todas las variables de entorno cargadas
+const { exec } = require('child_process');
+const os = require('os');
 
 const express = require('express');
 const { Cam } = require('onvif');
@@ -117,6 +118,59 @@ app.get('/cameras/status', authenticate, (req, res) => {
         status[camId] = cams[camId] ? 'Connected' : 'Disconnected';
     }
     res.json(status);
+});
+
+app.get('/server/status', authenticate,(req, res) => {
+    let command;
+    
+    if (os.platform() === 'linux') {
+        // En Linux, generalmente 'top -b -n 1' tiene un encabezado de aproximadamente 7 líneas antes de los procesos
+        command = 'top -b -n 1 | head -n 17'; // 7 líneas de encabezado + 10 líneas de procesos
+    } else if (os.platform() === 'darwin') {
+        // En macOS, 'top -l 1' tiene un encabezado de aproximadamente 10 líneas antes de los procesos
+        command = 'top -l 1 -s 0 -stats pid,command,cpu,mem | head -n 21'; // 10 líneas de encabezado + 11 líneas para asegurar 10 procesos
+    } else {
+        return res.status(500).send("Sistema operativo no soportado");
+    }
+
+    exec(command, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`exec error: ${error}`);
+            return res.status(500).send(`Error al ejecutar comando: ${error.message}`);
+        }
+        if (stderr) {
+            console.error(`stderr: ${stderr}`);
+            return res.status(500).send(stderr);
+        }
+        res.send(`<pre>${stdout}</pre>`);
+    });
+});
+
+// Endpoint para obtener la posición absoluta actual de la cámara
+app.get('/camera/position', authenticate, (req, res) => {
+    const { camId } = req.query; // Asume que el ID de la cámara se pasa como parámetro de consulta
+
+    const cam = cams[camId];
+    if (!cam) {
+        return res.status(500).send('Camera not initialized or invalid camera ID');
+    }
+
+    // Suponiendo que el módulo ONVIF tiene un método getStatus para obtener la posición actual
+    cam.getStatus((err, status) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).send('Error obtaining camera position');
+        }
+        console.log(`Position obtained for camera ${camId}`);
+        res.json({ 
+            camId: camId,
+            position: {
+                x: status.position.x,
+                y: status.position.y,
+                zoom: status.position.zoom
+            }
+        });
+    });
 });
 
 
