@@ -111,6 +111,15 @@ app.get('/health',authenticate, (req, res) => {
     res.send("saludo")
 });
 
+app.get('/cameras/status', authenticate, (req, res) => {
+    let status = {};
+    for (let camId in camIps) {
+        status[camId] = cams[camId] ? 'Connected' : 'Disconnected';
+    }
+    res.json(status);
+});
+
+
 // Inicia el servidor después de inicializar las cámaras
 initCameras().then(() => {
     app.listen(port, () => {
