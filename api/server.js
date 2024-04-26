@@ -172,7 +172,22 @@ app.get('/camera/position', authenticate, (req, res) => {
         });
     });
 });
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    const storedUsername = process.env.USERNAME;
+    const storedPassword = process.env.PASSWORD;
 
+    // Verifica las credenciales
+    if (username === storedUsername && password === storedPassword) {
+        const user = { name: username };
+        // Firmar el token con una duración de 1 hora
+        const accessToken = jwt.sign(user, process.env.SECRET_KEY, { expiresIn: '1h' });
+        res.json({ accessToken });
+    } else {
+        // Enviar error si las credenciales son incorrectas
+        res.status(401).send('Las credenciales son incorrectas');
+    }
+});
 
 // Inicia el servidor después de inicializar las cámaras
 initCameras().then(() => {
