@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { exec } = require('child_process');
 const os = require('os');
+const jwt = require('jsonwebtoken');
 
 const express = require('express');
 const { Cam } = require('onvif');
