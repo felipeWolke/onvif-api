@@ -7,8 +7,8 @@ const authenticate = (req, res, next) => {
     }
     if (token !== process.env.TOKEN) {
         return res.status(403).send('Invalid Token');
-    }
-    next();
+        }
+next();
 };
 
 module.exports = authenticate;
