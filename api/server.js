@@ -2,7 +2,7 @@ require('dotenv').config();
 const { exec } = require('child_process');
 const os = require('os');
 const jwt = require('jsonwebtoken');
-
+const retryInterval = 300 * 1000; // 120 segundos
 const express = require('express');
 const { Cam } = require('onvif');
 const cors = require('cors');
@@ -30,31 +30,43 @@ const camIps = {
 
 let cams = {};
 
-// Inicializa todas las cámaras ONVIF
 function initCameras() {
     const promises = Object.keys(camIps).map(key =>
         new Promise(resolve => {
-            new Cam({
-                hostname: camIps[key],
-                username: camUsername,
-                password: camPassword,
-                port: camPort,
-                timeout: 10000
-            }, function(err) {
-                if (err) {
-                    console.error(`Failed to initialize camera ${key}:`, err);
-                    resolve(); // Se resuelve la promesa aunque haya error
-                    return;
-                }
-                cams[key] = this;
-                console.log(`Camera ${key} initialized successfully`);
-                resolve();
-            });
+            initCamera(key, resolve);
         })
     );
 
-    // Resolve all promises, whether they succeeded or failed
-    return Promise.all(promises);
+    return Promise.all(promises).then(() => {
+        // Programa los reintentos para cámaras no inicializadas
+        setInterval(() => {
+            Object.keys(camIps).forEach(key => {
+                if (!cams[key]) {
+                    console.log(`Reintento de conexión para la cámara ${key}`);
+                    initCamera(key, () => {});
+                }
+            });
+        }, retryInterval);
+    });
+}
+
+function initCamera(key, resolve) {
+    new Cam({
+        hostname: camIps[key],
+        username: camUsername,
+        password: camPassword,
+        port: camPort,
+        timeout: 10000
+    }, function(err) {
+        if (err) {
+            console.error(`Failed to initialize camera ${key}:`, err);
+            resolve(); // Se resuelve la promesa aunque haya error
+            return;
+        }
+        cams[key] = this;
+        console.log(`Camera ${key} initialized successfully`);
+        resolve();
+    });
 }
 
 // Endpoint para mover la cámara
@@ -109,7 +121,7 @@ app.post('/moveAbsolute', authenticate, (req, res) => {
 });
 
 app.get('/health',authenticate, (req, res) => {
-    console.log(process.env.TOKEN)
+    
     res.send("saludo")
 });
 
