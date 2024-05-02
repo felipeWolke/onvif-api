@@ -94,9 +94,25 @@ app.post('/move', authenticate, (req, res) => {
                     return res.status(500).send('Error stopping camera');
                 }
                 console.log('Stop command sent, camera has stopped moving');
-                res.send(`Camera ${camId} moved for 1 second and stopped`);
+                //res.send(`Camera ${camId} moved for 1 second and stopped`);
             });
         }, 1000);
+    });
+    cam.getStatus((err, status) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).send('Error obtaining camera position');
+    }
+        console.log(`Position obtained for camera ${camId}`);
+        res.json({ 
+            camId: camId,
+            position: {
+                x: status.position.x,
+                y: status.position.y,
+                zoom: status.position.zoom
+            },
+            message: "camera moved to relative position"
+        })
     });
 });
 
@@ -116,7 +132,24 @@ app.post('/moveAbsolute', authenticate, (req, res) => {
         }
 
         console.log(`Absolute move command sent to camera ${camId}`);
-        res.send(`Camera ${camId} moved to absolute position`);
+        // Suponiendo que el módulo ONVIF tiene un método getStatus para obtener la posición actual
+        cam.getStatus((err, status) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).send('Error obtaining camera position');
+        }
+            console.log(`Position obtained for camera ${camId}`);
+            res.json({ 
+                camId: camId,
+                position: {
+                    x: status.position.x,
+                    y: status.position.y,
+                    zoom: status.position.zoom
+                },
+                message: "camera moved to absolute position"
+            })
+        });
+        //res.send(`Camera ${camId} moved to absolute position`);
     });
 });
 
