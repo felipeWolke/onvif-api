@@ -79,25 +79,17 @@ app.post('/move', authenticate, (req, res) => {
         return res.status(500).send('Camera not initialized or invalid camera ID');
     }
 
-    cam.continuousMove({ x, y, zoom }, (err) => {
+    cam.relativeMove({ x, y, zoom }, (err) => {
         if (err) {
             console.log(err);
             return res.status(500).send('Error moving camera');
         }
-
-        console.log(`Move command sent to camera ${camId}, camera will move for 1 second`);
-
-        setTimeout(() => {
-            cam.stop({panTilt: true, zoom: true}, (stopErr) => {
-                if (stopErr) {
-                    console.log(stopErr);
-                    return res.status(500).send('Error stopping camera');
-                }
-                console.log('Stop command sent, camera has stopped moving');
-                //res.send(`Camera ${camId} moved for 1 second and stopped`);
-            });
-        }, 1000);
+    
+        console.log(`Relative move command sent to camera ${camId}`);
+        // Aquí podrías enviar una respuesta de éxito, si la lógica de tu aplicación lo requiere
+        // res.send(`Camera ${camId} has moved to the relative position specified`);
     });
+    
     cam.getStatus((err, status) => {
         if (err) {
             console.log(err);
